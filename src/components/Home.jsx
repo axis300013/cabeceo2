@@ -3,18 +3,18 @@ import React, { useRef, useLayoutEffect, useState } from "react";
 
 
 // Timeline data: session name, subdir, first image
-const timelineSessions = [
-  { name: 'András Dóri', dir: '1. Andras Dori', img: 'IMG_0005.JPG' },
-  { name: 'Antonella Csongor', dir: '2. Antonella Csongor', img: 'm (103) - Copy.jpg' },
-  { name: 'Bocsi Barbi', dir: '3. Bocsi Barbi', img: '01.jpg' },
-  { name: 'Divatbemutató', dir: '4. Divatbemutato', img: 'DSC09154 (2).jpg' },
-  { name: 'Kálmán 2023', dir: '5. Kalman 2023', img: 'K   (102).jpg' },
-  { name: 'Moni 1', dir: '7. Moni 1', img: '2 (1).jpg' },
-  { name: 'Moni 2', dir: '8. Moni 2', img: 'centiméteres.jpg' },
-  { name: 'Tangóbal 2018', dir: '9. Tangobal 2018', img: 'DSC_0001.jpg' },
-  { name: 'Tangóbal 2019', dir: '10. Tangobal 2019', img: '_DSC4693.jpg' },
-];
 
+const timelineSessions = [
+  { name: 'Az első fotózás - 2018', dir: '7. Moni 1', img: '2 (1).jpg' },
+  { name: 'A második fotózás - 2019', dir: '8. Moni 2', img: 'centiméteres.jpg' },
+  { name: 'Tangóbal - 2018', dir: '9. Tangobal 2018', img: 'DSC_0001.jpg' },
+  { name: 'Tangóbal - 2019', dir: '10. Tangobal 2019', img: '_DSC4693.jpg' },
+  { name: 'Divatbemutató - 2020', dir: '4. Divatbemutato', img: 'DSC09154 (2).jpg' },
+  { name: 'Bocsi Barbi -', dir: '3. Bocsi Barbi', img: '01.jpg' },
+  { name: 'Antonella Csongor -', dir: '2. Antonella Csongor', img: 'm (103) - Copy.jpg' },
+  { name: 'András Dóri -', dir: '1. Andras Dori', img: 'IMG_0005.JPG' },
+  { name: 'A kereskedő - 2023', dir: '5. Kalman 2023', img: 'K   (102).jpg' },
+];
 
 const Home = () => (
   <main className="d-flex flex-column min-vh-100 bg-black text-light justify-content-center align-items-center">

@@ -2,4 +2,4 @@
 
 This project is a modern, responsive React single-page application for the Cabeceo brand, built with Vite and intended for Firebase Hosting. Use modular components, responsive CSS (Tailwind preferred), and best practices for accessibility and performance. See project requirements for details on structure and features.
 
-Run `npx eslint` to check for linting errors.
+
