@@ -85,7 +85,7 @@ function TimelineBar({ sessions }) {
   return (
     <div
       ref={containerRef}
-      className="position-relative w-100 d-flex flex-row justify-content-center align-items-center mb-5"
+      className="timeline-container position-relative w-100 d-flex flex-row justify-content-center align-items-center mb-5"
       style={{ 
         overflowX: 'auto', 
         minHeight,
@@ -109,7 +109,7 @@ function TimelineBar({ sessions }) {
       {sessions.map((session, idx) => (
         <div
           key={session.dir}
-          className={`d-flex flex-column align-items-center ${itemSpacing}`}
+          className={`timeline-item d-flex flex-column align-items-center ${itemSpacing}`}
           style={{
             zIndex: 1,
             minWidth: minItemWidth,
@@ -121,12 +121,12 @@ function TimelineBar({ sessions }) {
           {idx % 2 === 0 ? (
             // Up row: text above, then thumbnail
             <>
-              <span className={`${isMobile ? 'x-small' : 'small'} text-center mb-2`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
+              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mb-2`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
               <a href={`/gallery/${encodeURIComponent(session.dir)}`} className="timeline-thumb-link">
                 <img 
                   src={`/assets/Fotozasok/${session.dir}/${session.img}`} 
                   alt={session.name} 
-                  className="rounded shadow border border-warning" 
+                  className="timeline-thumbnail rounded shadow border border-warning" 
                   style={{ 
                     width: thumbSize, 
                     height: thumbSize, 
@@ -145,7 +145,7 @@ function TimelineBar({ sessions }) {
                 <img 
                   src={`/assets/Fotozasok/${session.dir}/${session.img}`} 
                   alt={session.name} 
-                  className="rounded shadow border border-warning" 
+                  className="timeline-thumbnail rounded shadow border border-warning" 
                   style={{ 
                     width: thumbSize, 
                     height: thumbSize, 
@@ -156,7 +156,7 @@ function TimelineBar({ sessions }) {
                   }} 
                 />
               </a>
-              <span className={`${isMobile ? 'x-small' : 'small'} text-center mt-1`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
+              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mt-1`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
             </>
           )}
         </div>
