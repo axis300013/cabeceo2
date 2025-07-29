@@ -94,21 +94,6 @@ export const catalogService = {
     }
   },
 
-  // Bulk add items
-  async bulkAddItems(filenames) {
-    try {
-      console.log(`Starting bulk add of ${filenames.length} items...`);
-      const promises = filenames.map(filename => 
-        this.addItem(filename, false, '', '', '')
-      );
-      await Promise.all(promises);
-      console.log('Bulk add completed successfully');
-    } catch (error) {
-      console.error('Error in bulk add:', error);
-      throw error;
-    }
-  },
-
   // Update item with all fields
   async updateItem(itemId, updates) {
     try {

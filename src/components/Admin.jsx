@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase/config";
 import { catalogService } from "../services/catalogService";
+import authService from "../services/authService";
+import AdminLogin from "./AdminLogin";
 import {
   collection,
   getDocs,
@@ -38,6 +40,11 @@ const imageFiles = [
 const catalogCol = collection(db, "catalog");
 const initialImages = imageFiles.map((filename, idx) => ({ filename, sold: idx === 1 }));
 const Admin = () => {
+  // Authentication state
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  
+  // Existing state
   const [images, setImages] = useState([]);
   const [sections, setSections] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
@@ -54,41 +61,44 @@ const Admin = () => {
   });
   const navigate = useNavigate();
 
+  // Authentication effect
+  useEffect(() => {
+    const unsubscribe = authService.onAuthStateChanged((user) => {
+      console.log('Auth state changed:', user?.email);
+      if (user && authService.isAuthorized(user)) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Fetch all catalog images and sections
   useEffect(() => {
+    // Only fetch data if user is authenticated
+    if (!user) return;
+    
     const fetchData = async () => {
       try {
         // Fetch sections
         const sectionsData = await catalogService.getAllSections();
         setSections(sectionsData);
 
-        // Fetch images
-        const snapshot = await getDocs(catalogCol);
-        const firestoreMap = {};
-        snapshot.forEach(docSnap => {
-          firestoreMap[docSnap.id] = docSnap.data();
-        });
+        // Fetch images from database
+        const dbItems = await catalogService.getAllItems();
         
-        // Create combined images array with fallback for static files
-        const allImages = [];
+        // Create a Set of filenames that exist in database to avoid duplicates
+        const dbFilenames = new Set(dbItems.map(item => item.filename));
         
-        // Add items from database
-        Object.keys(firestoreMap).forEach(id => {
-          const data = firestoreMap[id];
-          allImages.push({
-            id,
-            filename: data.filename,
-            sold: !!data.sold,
-            cikkszam: data.cikkszam || '',
-            description: data.description || '',
-            sectionId: data.sectionId || ''
-          });
-        });
+        // Start with database items
+        const allImages = [...dbItems];
         
-        // Add static files that aren't in database yet
+        // Add static files that aren't in database yet (as temp items)
         imageFiles.forEach(filename => {
-          const existsInDb = Object.values(firestoreMap).some(item => item.filename === filename);
-          if (!existsInDb) {
+          if (!dbFilenames.has(filename)) {
             allImages.push({
               id: `temp-${filename}`,
               filename,
@@ -101,12 +111,13 @@ const Admin = () => {
         });
         
         setImages(allImages);
+        console.log(`Loaded ${allImages.length} items (${dbItems.length} from DB, ${allImages.length - dbItems.length} temp)`);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   // Add new section
   const handleAddSection = async () => {
@@ -144,29 +155,13 @@ const Admin = () => {
         newItem.sectionId
       );
       
-      // Refresh images
-      const snapshot = await getDocs(catalogCol);
-      const firestoreMap = {};
-      snapshot.forEach(docSnap => {
-        firestoreMap[docSnap.id] = docSnap.data();
-      });
+      // Refresh images using the same logic as initial load
+      const dbItems = await catalogService.getAllItems();
+      const dbFilenames = new Set(dbItems.map(item => item.filename));
       
-      const allImages = [];
-      Object.keys(firestoreMap).forEach(id => {
-        const data = firestoreMap[id];
-        allImages.push({
-          id,
-          filename: data.filename,
-          sold: !!data.sold,
-          cikkszam: data.cikkszam || '',
-          description: data.description || '',
-          sectionId: data.sectionId || ''
-        });
-      });
-      
+      const allImages = [...dbItems];
       imageFiles.forEach(filename => {
-        const existsInDb = Object.values(firestoreMap).some(item => item.filename === filename);
-        if (!existsInDb) {
+        if (!dbFilenames.has(filename)) {
           allImages.push({
             id: `temp-${filename}`,
             filename,
@@ -211,29 +206,13 @@ const Admin = () => {
         });
       }
       
-      // Refresh images
-      const snapshot = await getDocs(catalogCol);
-      const firestoreMap = {};
-      snapshot.forEach(docSnap => {
-        firestoreMap[docSnap.id] = docSnap.data();
-      });
+      // Refresh images using consistent approach
+      const dbItems = await catalogService.getAllItems();
+      const dbFilenames = new Set(dbItems.map(item => item.filename));
       
-      const allImages = [];
-      Object.keys(firestoreMap).forEach(id => {
-        const data = firestoreMap[id];
-        allImages.push({
-          id,
-          filename: data.filename,
-          sold: !!data.sold,
-          cikkszam: data.cikkszam || '',
-          description: data.description || '',
-          sectionId: data.sectionId || ''
-        });
-      });
-      
+      const allImages = [...dbItems];
       imageFiles.forEach(filename => {
-        const existsInDb = Object.values(firestoreMap).some(item => item.filename === filename);
-        if (!existsInDb) {
+        if (!dbFilenames.has(filename)) {
           allImages.push({
             id: `temp-${filename}`,
             filename,
@@ -491,56 +470,68 @@ const Admin = () => {
     setBatchSold(sel => sel.includes(idx) ? sel.filter(i => i !== idx) : [...sel, idx]);
   };
 
-  // Bulk insert all static images to Firestore
-  const handleBulkInsertAll = async () => {
+  // Authentication handlers
+  const handleLoginSuccess = (authenticatedUser) => {
+    setUser(authenticatedUser);
+  };
+
+  const handleLogout = async () => {
     try {
-      const batch = writeBatch(db);
-      imageFiles.forEach(filename => {
-        const docRef = doc(db, "catalog", filename);
-        batch.set(docRef, { 
-          filename, 
-          sold: false,
-          cikkszam: '',
-          description: '',
-          sectionId: '',
-          createdAt: new Date().toISOString() 
-        });
-      });
-      await batch.commit();
-      
-      // Refresh the images list
-      const snapshot = await getDocs(catalogCol);
-      const firestoreMap = {};
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        firestoreMap[docSnap.id] = data;
-      });
-      
-      const allImages = [];
-      Object.keys(firestoreMap).forEach(id => {
-        const data = firestoreMap[id];
-        allImages.push({
-          id,
-          filename: data.filename,
-          sold: !!data.sold,
-          cikkszam: data.cikkszam || '',
-          description: data.description || '',
-          sectionId: data.sectionId || ''
-        });
-      });
-      
-      setImages(allImages);
-      alert(`Successfully added ${imageFiles.length} images to the database!`);
+      await authService.signOut();
+      setUser(null);
+      // Clear all data
+      setImages([]);
+      setSections([]);
+      setBatchSold([]);
+      setEditingItem(null);
+      setShowNewItemForm(false);
     } catch (error) {
-      console.error('Error bulk inserting images:', error);
-      alert('Error adding images to database: ' + error.message);
+      console.error('Error logging out:', error);
+      alert('Hiba a kijelentkezés során: ' + error.message);
     }
   };
+
+  // Show loading spinner during auth check
+  if (authLoading) {
+    return (
+      <main className="d-flex flex-column min-vh-100 bg-black text-light justify-content-center align-items-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Betöltés...</span>
+        </div>
+        <p className="mt-3">Hitelesítés ellenőrzése...</p>
+      </main>
+    );
+  }
+
+  // Show login form if not authenticated
+  if (!user) {
+    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <main className="d-flex flex-column min-vh-100 bg-black text-light justify-content-center align-items-center pt-5">
       <div className="container py-5">
-        <h1 className="display-5 fw-bold mb-4 text-center">Katalógus Adminisztráció</h1>
+        {/* Header with user info and logout */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h1 className="display-5 fw-bold">Katalógus Adminisztráció</h1>
+          <div className="d-flex align-items-center gap-3">
+            <div className="text-end">
+              <small className="text-muted d-block">Bejelentkezve:</small>
+              <span className="text-info">
+                <i className="fas fa-user-circle me-1"></i>
+                {user.displayName || user.email}
+              </span>
+            </div>
+            <button 
+              className="btn btn-outline-warning btn-sm"
+              onClick={handleLogout}
+              title="Kijelentkezés"
+            >
+              <i className="fas fa-sign-out-alt me-1"></i>
+              Kijelentkezés
+            </button>
+          </div>
+        </div>
         
         {/* Section Management */}
         <div className="card bg-dark text-light mb-4">
@@ -784,16 +775,6 @@ const Admin = () => {
           <button className="btn btn-secondary me-2" onClick={handleBatchUnsold} disabled={!batchSold.length}>Kijelöltek visszavonása</button>
           <button className="btn btn-danger me-2" onClick={handleBatchDelete} disabled={!batchSold.length}>Kijelöltek törlése</button>
           <button className="btn btn-info me-2" onClick={() => setShowNewItemForm(true)}>Új termék</button>
-        </div>
-
-        {/* Bulk Insert */}
-        <div className="mb-4">
-          <button className="btn btn-primary" onClick={handleBulkInsertAll}>
-            Összes statikus kép hozzáadása az adatbázishoz ({imageFiles.length} kép)
-          </button>
-          <small className="d-block text-muted mt-1">
-            Ez hozzáadja az összes előre definiált képet az adatbázishoz, ha még nincsenek ott.
-          </small>
         </div>
 
         {/* Section Filter */}

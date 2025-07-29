@@ -32,6 +32,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         {/* ...existing routes... */}
         <Route path="/admin-catalog" element={<Admin />} />
+        <Route path="/catalog-admin" element={<Admin />} />
         {/* English routes */}
         <Route path="/en" element={<Home />} />
         <Route path="/en/about" element={<AboutEn />} />

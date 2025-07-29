@@ -66,16 +66,9 @@ const CatalogEn = () => {
         ]);
         setSections(sectionsData);
         
-        // If no items in database, bulk add static files
-        if (items.length === 0) {
-          console.log('No items found, initializing with static files...');
-          await catalogService.bulkAddItems(staticImageFiles);
-          const newItems = await catalogService.getAllItems();
-          setCatalogItems(newItems);
-        } else {
-          console.log(`Loaded ${items.length} items from database (EN)`);
-          setCatalogItems(items);
-        }
+        // Set catalog items from database
+        console.log(`Loaded ${items.length} items from database (EN)`);
+        setCatalogItems(items);
       } catch (error) {
         console.error('Error loading catalog (EN):', error);
         setError(error.message);
