@@ -49,30 +49,49 @@ const Home = () => (
 function TimelineBar({ sessions }) {
   const containerRef = useRef(null);
   const [width, setWidth] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useLayoutEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
     if (containerRef.current) {
       setWidth(containerRef.current.scrollWidth);
     }
+    
+    checkMobile();
+    
     const handleResize = () => {
       if (containerRef.current) setWidth(containerRef.current.scrollWidth);
+      checkMobile();
     };
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Thumbnail size and vertical offset
-  const thumbSize = 80;
-  const vOffset = 50;
-  const lineY = 110;
+  // Responsive dimensions
+  const thumbSize = isMobile ? 60 : 80;
+  const vOffset = isMobile ? 35 : 50;
+  const lineY = isMobile ? 85 : 110;
   const minHeight = 2 * vOffset + thumbSize + 40;
+  const sideMargin = isMobile ? 20 : 60;
+  const itemSpacing = isMobile ? 'mx-1' : 'mx-3';
+  const minItemWidth = isMobile ? 80 : 120;
 
-  const fallbackWidth = width > 0 ? width : 600;
+  const fallbackWidth = width > 0 ? width : (isMobile ? 400 : 600);
+  
   return (
     <div
       ref={containerRef}
       className="position-relative w-100 d-flex flex-row justify-content-center align-items-center mb-5"
-      style={{ overflowX: 'auto', minHeight }}
+      style={{ 
+        overflowX: 'auto', 
+        minHeight,
+        paddingLeft: isMobile ? '10px' : '20px',
+        paddingRight: isMobile ? '10px' : '20px'
+      }}
     >
       {/* SVG straight line, responsive to thumbnails */}
       <svg
@@ -84,16 +103,16 @@ function TimelineBar({ sessions }) {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <line x1={60} y1={lineY} x2={Math.max(fallbackWidth - 60, 120)} y2={lineY} stroke="#ffc107" strokeWidth="4" />
+        <line x1={sideMargin} y1={lineY} x2={Math.max(fallbackWidth - sideMargin, sideMargin * 2)} y2={lineY} stroke="#ffc107" strokeWidth={isMobile ? "3" : "4"} />
       </svg>
       {/* Thumbnails */}
       {sessions.map((session, idx) => (
         <div
           key={session.dir}
-          className="d-flex flex-column align-items-center mx-3"
+          className={`d-flex flex-column align-items-center ${itemSpacing}`}
           style={{
             zIndex: 1,
-            minWidth: 120,
+            minWidth: minItemWidth,
             position: 'relative',
             top: idx % 2 === 0 ? -vOffset : vOffset,
             background: 'none',
@@ -102,18 +121,42 @@ function TimelineBar({ sessions }) {
           {idx % 2 === 0 ? (
             // Up row: text above, then thumbnail
             <>
-              <span className="small text-center mb-2">{session.name}</span>
+              <span className={`${isMobile ? 'x-small' : 'small'} text-center mb-2`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
               <a href={`/gallery/${encodeURIComponent(session.dir)}`} className="timeline-thumb-link">
-                <img src={`/assets/Fotozasok/${session.dir}/${session.img}`} alt={session.name} className="rounded shadow border border-warning" style={{ width: thumbSize, height: thumbSize, objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.2s', background: 'black' }} />
+                <img 
+                  src={`/assets/Fotozasok/${session.dir}/${session.img}`} 
+                  alt={session.name} 
+                  className="rounded shadow border border-warning" 
+                  style={{ 
+                    width: thumbSize, 
+                    height: thumbSize, 
+                    objectFit: 'cover', 
+                    cursor: 'pointer', 
+                    transition: 'transform 0.2s', 
+                    background: 'black' 
+                  }} 
+                />
               </a>
             </>
           ) : (
             // Down row: thumbnail first, then name below
             <>
               <a href={`/gallery/${encodeURIComponent(session.dir)}`} className="timeline-thumb-link mb-2">
-                <img src={`/assets/Fotozasok/${session.dir}/${session.img}`} alt={session.name} className="rounded shadow border border-warning" style={{ width: thumbSize, height: thumbSize, objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.2s', background: 'black' }} />
+                <img 
+                  src={`/assets/Fotozasok/${session.dir}/${session.img}`} 
+                  alt={session.name} 
+                  className="rounded shadow border border-warning" 
+                  style={{ 
+                    width: thumbSize, 
+                    height: thumbSize, 
+                    objectFit: 'cover', 
+                    cursor: 'pointer', 
+                    transition: 'transform 0.2s', 
+                    background: 'black' 
+                  }} 
+                />
               </a>
-              <span className="small text-center mt-1">{session.name}</span>
+              <span className={`${isMobile ? 'x-small' : 'small'} text-center mt-1`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
             </>
           )}
         </div>
