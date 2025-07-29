@@ -72,25 +72,26 @@ function TimelineBar({ sessions }) {
   }, []);
 
   // Responsive dimensions
-  const thumbSize = isMobile ? 60 : 80;
-  const vOffset = isMobile ? 35 : 50;
-  const lineY = isMobile ? 85 : 110;
+  const thumbSize = isMobile ? 50 : 80;
+  const vOffset = isMobile ? 30 : 50;
+  const lineY = isMobile ? 75 : 110;
   const minHeight = 2 * vOffset + thumbSize + 40;
-  const sideMargin = isMobile ? 20 : 60;
+  const sideMargin = isMobile ? 10 : 60;
   const itemSpacing = isMobile ? 'mx-1' : 'mx-3';
-  const minItemWidth = isMobile ? 80 : 120;
+  const minItemWidth = isMobile ? 70 : 120;
 
   const fallbackWidth = width > 0 ? width : (isMobile ? 400 : 600);
   
   return (
     <div
       ref={containerRef}
-      className="timeline-container position-relative w-100 d-flex flex-row justify-content-center align-items-center mb-5"
+      className={`timeline-container position-relative w-100 d-flex flex-row mb-5 ${isMobile ? 'justify-content-start' : 'justify-content-center'} align-items-center`}
       style={{ 
-        overflowX: 'auto', 
+        overflowX: isMobile ? 'auto' : 'visible', 
         minHeight,
-        paddingLeft: isMobile ? '10px' : '20px',
-        paddingRight: isMobile ? '10px' : '20px'
+        paddingLeft: isMobile ? '15px' : '20px',
+        paddingRight: isMobile ? '15px' : '20px',
+        scrollBehavior: 'smooth'
       }}
     >
       {/* SVG straight line, responsive to thumbnails */}
@@ -113,6 +114,7 @@ function TimelineBar({ sessions }) {
           style={{
             zIndex: 1,
             minWidth: minItemWidth,
+            flexShrink: 0,
             position: 'relative',
             top: idx % 2 === 0 ? -vOffset : vOffset,
             background: 'none',
@@ -121,7 +123,7 @@ function TimelineBar({ sessions }) {
           {idx % 2 === 0 ? (
             // Up row: text above, then thumbnail
             <>
-              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mb-2`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
+              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mb-2`} style={{ fontSize: isMobile ? '0.65rem' : '0.875rem', maxWidth: isMobile ? '70px' : 'auto', wordWrap: 'break-word' }}>{session.name}</span>
               <a href={`/gallery/${encodeURIComponent(session.dir)}`} className="timeline-thumb-link">
                 <img 
                   src={`/assets/Fotozasok/${session.dir}/${session.img}`} 
@@ -156,7 +158,7 @@ function TimelineBar({ sessions }) {
                   }} 
                 />
               </a>
-              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mt-1`} style={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{session.name}</span>
+              <span className={`timeline-text ${isMobile ? 'x-small' : 'small'} text-center mt-1`} style={{ fontSize: isMobile ? '0.65rem' : '0.875rem', maxWidth: isMobile ? '70px' : 'auto', wordWrap: 'break-word' }}>{session.name}</span>
             </>
           )}
         </div>

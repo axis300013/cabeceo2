@@ -13,22 +13,33 @@
     <style>
       @media (max-width: 767px) {
         .timeline-container {
-          padding: 0 10px;
-          overflow-x: auto;
+          padding: 0 15px !important;
+          overflow-x: auto !important;
+          justify-content: flex-start !important;
+          scroll-behavior: smooth;
         }
         
         .timeline-item {
-          min-width: 80px !important;
-          margin: 0 4px !important;
+          min-width: 70px !important;
+          margin: 0 2px !important;
+          flex-shrink: 0;
         }
         
         .timeline-thumbnail {
-          width: 60px !important;
-          height: 60px !important;
+          width: 50px !important;
+          height: 50px !important;
         }
         
         .timeline-text {
-          font-size: 0.7rem !important;
+          font-size: 0.65rem !important;
+          line-height: 1.1 !important;
+          max-width: 70px;
+          word-wrap: break-word;
+        }
+        
+        /* Ensure timeline starts from left edge */
+        .timeline-container > div:first-of-type {
+          margin-left: 0 !important;
         }
       }
     </style>
