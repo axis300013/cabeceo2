@@ -3,29 +3,52 @@ import { useNavigate } from "react-router-dom";
 
 const initialState = { name: "", email: "", message: "" };
 
-
-
-
 function Contact() {
   const [form, setForm] = useState(initialState);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  
   const handleSubmit = async e => {
     e.preventDefault();
     setError(null);
+    setSubmitted(false);
+    setIsLoading(true);
+    
     try {
-      const res = await fetch('http://localhost:3001/api/contact', {
+      // Firebase Function URL - will be updated after deployment
+      const FUNCTION_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://sendcontactemail-yrmh5nz2aq-ew.a.run.app' // Production Firebase Function URL
+        : 'http://localhost:3001/api/contact'; // Local development fallback
+      
+      const response = await fetch(FUNCTION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: form.message
+        })
       });
-      if (!res.ok) throw new Error('Hiba az üzenet küldésekor');
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Hiba az üzenet küldésekor');
+      }
+      
+      console.log('Email sent successfully via Firebase Function:', data);
       setSubmitted(true);
-    } catch {
-      setError('Hiba az üzenet küldésekor. Próbáld újra később.');
+      setForm(initialState); // Reset form after successful submission
+      
+    } catch (err) {
+      console.error('Contact form error:', err);
+      setError(err.message || 'Hiba az üzenet küldésekor. Próbáld újra később.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,7 +59,16 @@ function Contact() {
         <div className="row justify-content-center">
           <div className="col-lg-7">
             {submitted ? (
-              <div className="alert alert-success text-center">Köszönjük az üzenetet!</div>
+              <div className="alert alert-success text-center">
+                <h5 className="mb-2">
+                  <i className="fas fa-check-circle me-2"></i>
+                  Üzenet sikeresen elküldve!
+                </h5>
+                <p className="mb-1">Köszönjük a megkeresést!</p>
+                <small className="text-muted">
+                  Hamarosan válaszolunk az <strong>info@cabeceo.hu</strong> címről.
+                </small>
+              </div>
             ) : (
               <>
                 {error && <div className="alert alert-danger text-center">{error}</div>}
@@ -53,12 +85,25 @@ function Contact() {
                     <label htmlFor="message" className="form-label fw-semibold">Üzenet</label>
                     <textarea id="message" name="message" required className="form-control" rows={5} value={form.message} onChange={handleChange}></textarea>
                   </div>
-                  <button type="submit" className="btn btn-primary px-5 py-2">Küldés</button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary px-5 py-2" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Küldés...
+                      </>
+                    ) : (
+                      'Küldés'
+                    )}
+                  </button>
                 </form>
               </>
             )}
             <div className="mt-5 text-center text-secondary">
-              <div>Email: <a href="mailto:cabeceo.monika@gmail.com" className="text-primary text-decoration-underline">cabeceo.monika@gmail.com</a></div>
+              <div>Email: <a href="mailto:info@cabeceo.hu" className="text-primary text-decoration-underline">info@cabeceo.hu</a></div>
               <div className="mt-2">Instagram: <a href="https://instagram.com/cabeceo.hu" target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">@cabeceo.hu</a></div>
               <div className="mt-2">
                 <a href="https://www.facebook.com/cabeceotangoclothes" target="_blank" rel="noopener noreferrer" className="d-inline-flex align-items-center gap-2 text-decoration-none text-primary">

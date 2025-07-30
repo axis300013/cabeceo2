@@ -1,39 +1,32 @@
-console.log('🔄 Starting Cabeceo Contact Backend Server...');
+console.log('Starting server...');
 
 import express from 'express';
-import cors from 'cors';
 import nodemailer from 'nodemailer';
+import cors from 'cors';
 
-console.log('📦 All modules imported successfully');
+console.log('Modules imported successfully');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log('⚙️ Express configured');
+console.log('Express configured');
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.eu',  // EU server
+  host: 'smtp.zoho.com',
   port: 587,
   secure: false, // Use TLS
   auth: {
     user: 'info@cabeceo.hu',
-    pass: 'Clobufclobuf01#'
+    pass: 'clobuf01'
   }
 });
 
-console.log('📧 Zoho EU SMTP transporter created');
+console.log('Transporter created');
 
 app.post('/api/contact', (req, res) => {
-  console.log('📬 Contact form submission received:', req.body);
+  console.log('Contact endpoint hit with:', req.body);
   const { name, email, message } = req.body;
-  
-  if (!name || !email || !message) {
-    return res.status(400).json({
-      success: false,
-      message: 'Minden mező kitöltése kötelező.'
-    });
-  }
   
   const mailOptions = {
     from: '"Cabeceo Contact Form" <info@cabeceo.hu>',
@@ -56,21 +49,13 @@ app.post('/api/contact', (req, res) => {
 
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) {
-      console.error('❌ Email send error:', err.message);
-      
-      let errorMessage = 'Hiba az üzenet küldésekor. Próbáld újra később.';
-      if (err.code === 'EAUTH') {
-        console.error('🔐 AUTHENTICATION FAILED - Check password or create app-specific password');
-        errorMessage = 'SMTP hitelesítési hiba. Ellenőrizd a beállításokat.';
-      }
-      
+      console.error('Email send error:', err);
       return res.status(500).json({ 
         success: false, 
-        message: errorMessage
+        message: 'Hiba az üzenet küldésekor. Próbáld újra később.' 
       });
     }
-    
-    console.log('✅ Email sent successfully:', info.response);
+    console.log('Email sent successfully:', info.response);
     res.json({ 
       success: true, 
       message: 'Üzenet sikeresen elküldve!' 
@@ -78,11 +63,9 @@ app.post('/api/contact', (req, res) => {
   });
 });
 
+console.log('Route configured');
+
 app.listen(3001, () => {
-  console.log('🚀 Cabeceo Contact Backend Server is running!');
-  console.log('🌐 Server URL: http://localhost:3001');
-  console.log('📧 Using Zoho EU SMTP (smtp.zoho.eu)');
-  console.log('📬 Email account: info@cabeceo.hu');
-  console.log('');
-  console.log('Ready to receive contact form submissions! 💌');
+  console.log('✅ Contact backend running on http://localhost:3001');
+  console.log('✅ Using Zoho SMTP with info@cabeceo.hu');
 });
